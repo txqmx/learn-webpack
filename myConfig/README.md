@@ -33,5 +33,11 @@
 `npm install babel-loader @babel/core @babel/preset-env -D`
 `npm install url-loader file-loader  -D`
  `npm install copy-webpack-plugin -D `
-
 `npm install mini-css-extract-plugin -D`
+
+serve
+
+构建工具 | vue-cli2 | vue-cli3 | webpack4-handle
+---|---|---|---
+速度 | 11.4s | 6s| 3.9s
+大小 | 400.4KB | 430.24kB | 371.4KB
