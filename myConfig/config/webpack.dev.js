@@ -10,6 +10,7 @@ function resolve(dir){
 module.exports = {
     context: path.resolve(__dirname, '..'), // 上下文，默认当前目录下
     mode: "development",
+    devtool: "cheap-module-eval-source-map",
     devServer: {
         contentBase: resolve('dist'),
         hot: true,
@@ -40,8 +41,8 @@ module.exports = {
         },
         extensions: ['.js','.vue','.json'],
     },
-    devtool: "cheap-module-eval-source-map",
     module: {
+        noParse: /^(vue|vue-router|vuex|vuex-router-sync)$/,
         rules: [
             {
                 test: /\.js$/,
@@ -55,7 +56,16 @@ module.exports = {
             },
             {
                 test: /\.vue$/,
-                loader: 'vue-loader'
+                use: [
+                    {
+                        loader: 'vue-loader',
+                        options: {
+                            compilerOptions: {
+                                preserveWhitespace: false
+                            }
+                        }
+                    }
+                ]
             },
             {
                 test:/\.css$/,

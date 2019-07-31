@@ -7,6 +7,7 @@ const OptimizeCss = require('optimize-css-assets-webpack-plugin');
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const Happypack = require('happypack');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack')
 function resolve(dir){
     return path.join(__dirname, '..', dir)
@@ -19,14 +20,15 @@ module.exports = {
         app:resolve('src/main.js')
     },
     output: {
-        filename: "js/[name].[hash:5].js",
+        filename: "js/[name].[contenthash:8].js",
         path: resolve('dist'),
-        publicPath: "/"
+        publicPath: "/",
+        chunkFilename: 'js/[name].[contenthash:8].js'
     },
     resolve: {
         modules: ['node_modules'],
         alias: {
-            'vue$': 'vue/dist/vue.esm.js',
+            'vue$': 'vue/dist/vue.runtime.min.js',
             '@': resolve('src'),
             'styles': resolve('src/assets/styles'),
             'common': resolve('src/common')
@@ -55,7 +57,7 @@ module.exports = {
                 vendor:{ // 第三方模块
                     name: 'vendors',
                     priority: 1,  // 权重，先抽离第三方模块
-                    test: /node_module/,
+                    test: /[\\\/]node_modules[\\\/]/,
                     chunks: 'initial',
                     minChunks: 2 // 引用次数
                 },
@@ -64,6 +66,7 @@ module.exports = {
         }
     },
     module: {
+        noParse: /^(vue|vue-router|vuex|vuex-router-sync)$/,
         rules: [
             {
                 test: /\.js$/,
@@ -85,6 +88,14 @@ module.exports = {
                 use:[
                     MiniCssExtractPlugin.loader,
                     'css-loader',
+                    {
+                        loader: "postcss-loader",
+                        options: {
+                            plugins: [
+                                require("autoprefixer") /*在这里添加*/
+                            ]
+                        }
+                    }
                 ]
             },
             {
@@ -92,6 +103,14 @@ module.exports = {
                 use:[
                     MiniCssExtractPlugin.loader,
                     'css-loader',
+                    {
+                        loader: "postcss-loader",
+                        options: {
+                            plugins: [
+                                require("autoprefixer") /*在这里添加*/
+                            ]
+                        }
+                    },
                     'stylus-loader', // 把stylus转变为css
                 ]
             },
@@ -109,8 +128,13 @@ module.exports = {
                 test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,
                 loader: 'url-loader',
                 options: {
-                    limit: 10000,
-                    name: 'media/[name].[hash:7].[ext]'
+                    limit: 4096,
+                    fallback: {
+                        loader: 'file-loader',
+                        options: {
+                            name: 'fonts/[name].[hash:8].[ext]'
+                        }
+                    }
                 }
             },
             // canvas 解析
@@ -118,8 +142,13 @@ module.exports = {
                 test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
                 loader: 'url-loader',
                 options: {
-                    limit: 10000,
-                    name: 'fonts/[name].[hash:7].[ext]'
+                    limit: 4096,
+                    fallback: {
+                        loader: 'file-loader',
+                        options: {
+                            name: 'fonts/[name].[hash:8].[ext]'
+                        }
+                    }
                 }
             }
         ]
@@ -133,6 +162,11 @@ module.exports = {
                     presets: ['@babel/preset-env']
                 }
             }]
+        }),
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: '"production"',
+            }
         }),
         new VueLoaderPlugin(),
         new HtmlWebpackPlugin({
@@ -148,16 +182,17 @@ module.exports = {
         new webpack.HashedModuleIdsPlugin(),
         new CleanWebpackPlugin(),
         new MiniCssExtractPlugin({
-            filename: 'css/[name]_[hash:5].css',
-            // chunkFilename: "css/[id].css"
+            filename: 'css/[name]_[contenthash:8].css',
+            chunkFilename: "css/[name]_[contenthash:8].css"
         }),
         new CopyWebpackPlugin([  // 不做处理，直接拷贝
             {
-                from: path.resolve(__dirname, '../static'),
-                to: 'static',
+                from: path.resolve(__dirname, '../static/mock'),
+                to: 'api',
                 ignore: ['.*']
             }
-        ])
+        ]),
+        new BundleAnalyzerPlugin()
     ]
 }
 
